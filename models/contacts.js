@@ -42,12 +42,15 @@ const updateContact = async (contactId, body) => {
 
   const editedContactList = contactsList.map((contact) => {
     if (contact.id === contactId) {
-      const editedContact = {
-        id: contact.id,
-        name: body.name ? body.name : contact.name,
-        email: body.email ? body.email : contact.email,
-        phone: body.phone ? body.phone : contact.phone,
-      };
+      class EditContact {
+        constructor(name, email, phone) {
+          this.id = contact.id;
+          this.name = name ? body.name : contact.name;
+          this.email = email ? body.email : contact.email;
+          this.phone = phone ? body.phone : contact.phone;
+        }
+      }
+      const editedContact = new EditContact(body.name, body.email, body.phone);
 
       return editedContact;
     } else {
