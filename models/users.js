@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const Joi = require("joi");
-
+const gravatar = require("gravatar");
 const Schema = mongoose.Schema;
 
 const users = new Schema({
@@ -22,6 +22,10 @@ const users = new Schema({
   token: {
     type: String,
     default: null,
+  },
+  avatarUrl: {
+    type: String,
+    default: gravatar.url("miloszplesniak@gmail.com"),
   },
 });
 
