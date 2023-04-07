@@ -1,16 +1,15 @@
 const fs = require("fs/promises");
 
-const checkFolderIsExist = (path) => {
+const isAccessible = (path) => {
   return fs
     .access(path)
     .then(() => true)
     .catch(() => false);
 };
 
-const createFolderIfNotExist = async (path) => {
-  if (!(await checkFolderIsExist(path))) {
-    console.log(path);
-    // await fs.mkdir(path);
+const createFolderIfNotExist = async (folder) => {
+  if (!(await isAccessible(folder))) {
+    await fs.mkdir(folder);
   }
 };
 module.exports = createFolderIfNotExist;

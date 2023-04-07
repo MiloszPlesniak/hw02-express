@@ -96,8 +96,7 @@ const currentUser = async (id) => {
   }
 };
 const editUser = async (id, changedField) => {
-  const editedUser = await User.findByIdAndUpdate(id, changedField);
-  console.log(editedUser);
+  await User.findByIdAndUpdate(id, changedField);
 };
 
 const setAvatar = async (file, body) => {
@@ -106,14 +105,16 @@ const setAvatar = async (file, body) => {
   const fileName = path.join(temporaryStore, originalname);
 
   const extname = path.extname(originalname);
-  if (!supportedFormats.includes(extname)) {
-    throw new Error({
-      message: " Wrong file format",
-      code: 400,
-    });
-  }
+
   const finalyPath = finalyStore + "/" + email + "Avatar" + extname;
   try {
+    if (!supportedFormats.includes(extname)) {
+      await fs.unlink(temporaryName);
+      return {
+        message: " Wrong file format",
+        code: 400,
+      };
+    }
     const image = await jimp.read(fileName);
     image.resize(250, 250);
     await image.writeAsync(fileName);
