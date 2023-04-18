@@ -10,6 +10,8 @@ const {
   logoutUser,
   registerUser,
   setAvatar,
+  emailVeryfy,
+  resendingTheEmail,
 } = require("../../controllers/users");
 
 const temporaryStore = path.join(process.cwd(), "/tmp");
@@ -78,5 +80,26 @@ router.patch(
     }
   }
 );
+
+router.get("/verify/:verificationToken", async (req, res) => {
+  const { verificationToken } = req.params;
+
+  try {
+    const { message, code } = await emailVeryfy(verificationToken);
+    res.status(code).json({ message });
+  } catch (error) {
+    res.status(500).json(error);
+  }
+});
+
+router.post("/verify", async (req, res) => {
+  try {
+    const { email } = req.body;
+    const { code, message } = await resendingTheEmail(email);
+    res.status(code).json({ message });
+  } catch (error) {
+    res.status(500).json(error);
+  }
+});
 
 module.exports = router;

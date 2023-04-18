@@ -1,8 +1,10 @@
 const fs = require("fs/promises");
 const jimp = require("jimp");
 const path = require("path");
+const { v4: uuidv4 } = require("uuid");
 const { User, registerValidate, hashPassword } = require("../models/users.js");
 const loginHandler = require("../auth/loginHandler");
+const sendEmail = require("../auth/sendEmail.js");
 
 const temporaryStore = path.join(process.cwd(), "/tmp");
 const finalyStore = path.join(process.cwd(), "/public/avatars");
@@ -26,14 +28,20 @@ const registerUser = async (userData) => {
     };
   }
   const { email, password } = userData;
-
   if (await getUserByEmail(email)) {
     return { code: 409, message: "Email in use" };
   }
   try {
-    const user = new User({ email, password: hashPassword(password) });
-
+    const user = new User({
+      email,
+      password: hashPassword(password),
+      verificationToken: uuidv4(),
+    });
     user.save();
+    await sendEmail(
+      email,
+      `http://localhost:3000/api/users/verify/${user.verificationToken}`
+    );
     return { code: 201, message: user };
   } catch (error) {
     console.log(error);
@@ -52,7 +60,8 @@ const loginUser = async (userData) => {
   const { email, password } = userData;
 
   const user = await getUserByEmail(email);
-
+  if (!user.verify)
+    return { code: 401, message: "e-mail has not been verified" };
   const token = await loginHandler(password, user);
   if (!user || !token) {
     return { code: 401, message: "Email or password is wrong" };
@@ -131,6 +140,34 @@ const setAvatar = async (file, body) => {
   }
 };
 
+const emailVeryfy = async (verificationToken) => {
+  const user = await User.findOne({ verificationToken: verificationToken });
+
+  if (!user || user.verify) {
+    return { code: 404, message: "User not found" };
+  }
+  try {
+    editUser(user.id, { verify: true });
+    return { code: 200, message: "Verification successful" };
+  } catch (error) {
+    console.log(error);
+    return { code: 500, message: error };
+  }
+};
+
+const resendingTheEmail = async (email) => {
+  if (!email) return { code: 400, message: "missing required field email" };
+  const user = await getUserByEmail(email);
+  if (!user) return { code: 404, message: "User not found" };
+  if (user.verify)
+    return { code: 400, message: "Verification has already been passed" };
+  await sendEmail(
+    email,
+    `http://localhost:3000/api/users/verify/${user.verificationToken}`
+  );
+  return { code: 200, message: "Verification email sent" };
+};
+
 module.exports = {
   registerUser,
   getUserByEmail,
@@ -139,4 +176,6 @@ module.exports = {
   logoutUser,
   currentUser,
   setAvatar,
+  emailVeryfy,
+  resendingTheEmail,
 };
