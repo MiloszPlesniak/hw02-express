@@ -8,7 +8,7 @@ const router = require("./routes/api/routes.js");
 const app = express();
 
 const formatsLogger = app.get("env") === "development" ? "dev" : "short";
-
+app.use("/public", express.static("public"));
 app.use(logger(formatsLogger));
 app.use(cors());
 app.use(express.json());

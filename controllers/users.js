@@ -1,5 +1,12 @@
+const fs = require("fs/promises");
+const jimp = require("jimp");
+const path = require("path");
 const { User, registerValidate, hashPassword } = require("../models/users.js");
 const loginHandler = require("../auth/loginHandler");
+
+const temporaryStore = path.join(process.cwd(), "/tmp");
+const finalyStore = path.join(process.cwd(), "/public/avatars");
+const supportedFormats = [".jpg", ".png", ".bmp", ".tiff", ".gif"];
 
 const getUserByEmail = async (email) => {
   const user = User.findOne({ email });
@@ -25,6 +32,7 @@ const registerUser = async (userData) => {
   }
   try {
     const user = new User({ email, password: hashPassword(password) });
+
     user.save();
     return { code: 201, message: user };
   } catch (error) {
@@ -33,7 +41,6 @@ const registerUser = async (userData) => {
 };
 
 const loginUser = async (userData) => {
-  console.log(userData);
   const { error } = registerValidate.validate(userData);
   if (error) {
     return {
@@ -41,7 +48,9 @@ const loginUser = async (userData) => {
       message: error.details[0].message,
     };
   }
+
   const { email, password } = userData;
+
   const user = await getUserByEmail(email);
 
   const token = await loginHandler(password, user);
@@ -86,6 +95,41 @@ const currentUser = async (id) => {
     };
   }
 };
+const editUser = async (id, changedField) => {
+  await User.findByIdAndUpdate(id, changedField);
+};
+
+const setAvatar = async (file, body) => {
+  const { path: temporaryName, originalname } = file;
+  const { email, _id } = body;
+  const fileName = path.join(temporaryStore, originalname);
+
+  const extname = path.extname(originalname);
+
+  const finalyPath = finalyStore + "/" + email + "Avatar" + extname;
+  try {
+    if (!supportedFormats.includes(extname)) {
+      await fs.unlink(temporaryName);
+      return {
+        message: " Wrong file format",
+        code: 400,
+      };
+    }
+    const image = await jimp.read(fileName);
+    image.resize(250, 250);
+    await image.writeAsync(fileName);
+    await fs.rename(fileName, finalyPath);
+    const avatarUrl = `/public/avatars/${path.basename(finalyPath)}`;
+    editUser(_id, { avatarUrl });
+    return {
+      code: 200,
+      message: avatarUrl,
+    };
+  } catch (error) {
+    console.log(error);
+    await fs.unlink(temporaryName);
+  }
+};
 
 module.exports = {
   registerUser,
@@ -94,4 +138,5 @@ module.exports = {
   loginUser,
   logoutUser,
   currentUser,
+  setAvatar,
 };

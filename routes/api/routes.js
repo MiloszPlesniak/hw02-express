@@ -1,14 +1,9 @@
 const router = require("express").Router();
 
 const contactsRouter = require("./contacts");
-const registerRouter = require("./register");
-const loginRouter = require("./login");
-const logoutRouter = require("./logout");
-const currentRouter = require("./current");
+const usersRouter = require("./users");
 
 router.use("/api/contacts", contactsRouter);
-router.use("/api/users", registerRouter);
-router.use("/api/users", loginRouter);
-router.use("/api/users", logoutRouter);
-router.use("/api/users", currentRouter);
+router.use("/api/users", usersRouter);
+
 module.exports = router;
