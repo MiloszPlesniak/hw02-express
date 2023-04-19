@@ -10,7 +10,7 @@ const {
   logoutUser,
   registerUser,
   setAvatar,
-  emailVeryfy,
+  emailVerify,
   resendingTheEmail,
 } = require("../../controllers/users");
 
@@ -85,7 +85,7 @@ router.get("/verify/:verificationToken", async (req, res) => {
   const { verificationToken } = req.params;
 
   try {
-    const { message, code } = await emailVeryfy(verificationToken);
+    const { message, code } = await emailVerify(verificationToken);
     res.status(code).json({ message });
   } catch (error) {
     res.status(500).json(error);

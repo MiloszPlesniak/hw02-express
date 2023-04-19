@@ -140,7 +140,7 @@ const setAvatar = async (file, body) => {
   }
 };
 
-const emailVeryfy = async (verificationToken) => {
+const emailVerify = async (verificationToken) => {
   const user = await User.findOne({ verificationToken: verificationToken });
 
   if (!user || user.verify) {
@@ -176,6 +176,6 @@ module.exports = {
   logoutUser,
   currentUser,
   setAvatar,
-  emailVeryfy,
+  emailVerify,
   resendingTheEmail,
 };
