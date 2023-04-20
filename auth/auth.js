@@ -7,6 +7,7 @@ const JWT_TOKEN = process.env.JWT_TOKEN;
 
 const auth = async (req, res, next) => {
   const token = req.headers.authorization;
+  console.log(req.body);
   if (!token) {
     return res.status(401).send("No token provided");
   }
@@ -16,8 +17,14 @@ const auth = async (req, res, next) => {
     const user = await getUserById(id);
 
     if (user.token === token) {
-      req.body = user;
-      next();
+      if (user.verify) {
+        req.body = user;
+        next();
+      } else {
+        return res
+          .status(401)
+          .json({ message: "e-mail has not been verified" });
+      }
     } else {
       return res.status(401).json({ message: "Not authorized" });
     }
